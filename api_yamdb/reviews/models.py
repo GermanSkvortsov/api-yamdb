@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
 
-from title.models import Title
+from titles.models import Title
 
 User = get_user_model()
 
 
 class FeedBackModel(models.Model):
-    """Обстрактная модель для обратной связи от пользователей."""
+    """Абстрактная модель для обратной связи от пользователей."""
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -44,7 +44,9 @@ class Review(FeedBackModel):
             models.UniqueConstraint(
                 fields=['title', 'author'],
                 name='unique_review_for_title',
-                violation_error_message='Уже добавлен ваш отзыв к этому произведению.',
+                violation_error_message=(
+                    'Уже добавлен ваш отзыв к этому произведению.'
+                )
             ),
             models.CheckConstraint(
                 condition=Q(score__lte=10) & Q(score__gte=0),
