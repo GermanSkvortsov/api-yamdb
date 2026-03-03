@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from .models import User
-from .validators import validate_username_not_me
+from .validators import validate_username_not_me, validate_username_regex
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(
         max_length=150,
-        validators=[validate_username_not_me]
+        validators=[validate_username_not_me, validate_username_regex]
     )
 
     class Meta:
@@ -44,7 +44,7 @@ class SignupSerializer(serializers.Serializer):
     """Для регистрации."""
     username = serializers.CharField(
         max_length=150,
-        validators=[validate_username_not_me]
+        validators=[validate_username_not_me, validate_username_regex]
     )
     email = serializers.EmailField(max_length=254)
 
