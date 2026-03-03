@@ -41,5 +41,6 @@ social-auth-app-django==5.4.2
 social-auth-core==4.5.4
 sqlparse==0.5.2
 toml==0.10.2
+tzdata==2025.3
 uritemplate==4.1.1
 urllib3==2.3.0
