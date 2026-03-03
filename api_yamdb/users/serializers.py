@@ -1,4 +1,7 @@
+"""Сериализаторы для приложения users."""
+
 from rest_framework import serializers
+
 from .models import User
 from .validators import validate_username_not_me
 

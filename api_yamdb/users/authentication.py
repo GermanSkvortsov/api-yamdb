@@ -1,3 +1,5 @@
+"""Кастомная аутентификация по JWT-токену."""
+
 import jwt
 from rest_framework import authentication, exceptions
 from django.conf import settings
@@ -11,27 +13,30 @@ class SafeJWTAuthentication(authentication.BaseAuthentication):
     """
 
     def authenticate(self, request):
-        auth_header = request.headers.get('Authorization')
+        """
+        Проверяет JWT-токен из заголовка Authorization.
 
+        Возвращает пользователя и токен если всё ок,
+        None если токена нет,
+        Иначе вызывает AuthenticationFailed.
+        """
+
+        auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None
-
         try:
             prefix, token = auth_header.split(' ')
             if prefix.lower() != 'bearer':
                 return None
         except ValueError:
             return None
-
         try:
             payload = jwt.decode(
                 token,
                 settings.SECRET_KEY,
                 algorithms=['HS256']
             )
-
             user = User.objects.get(id=payload['user_id'])
-
             return (user, token)
 
         except jwt.ExpiredSignatureError:

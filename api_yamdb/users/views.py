@@ -1,3 +1,5 @@
+"""Views для приложения users."""
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,6 +13,7 @@ from .utils import generate_confirmation_code, send_confirmation_email
 @api_view(['POST'])
 def signup(request):
     """Регистрация нового пользователя или повторный запрос кода."""
+
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 

@@ -1,3 +1,5 @@
+"""Кастомные permissions для приложения users."""
+
 from rest_framework import permissions
 
 
@@ -5,6 +7,8 @@ class IsAdmin(permissions.BasePermission):
     """Доступ только для администраторов."""
 
     def has_permission(self, request, view):
+        """Проверяет, является ли пользователь администратором."""
+
         return request.user.is_authenticated and request.user.is_admin
 
 
@@ -12,6 +16,8 @@ class IsModerator(permissions.BasePermission):
     """Доступ только для модераторов."""
 
     def has_permission(self, request, view):
+        """Проверяет, является ли пользователь модератором."""
+
         return request.user.is_authenticated and request.user.is_moderator
 
 
@@ -22,6 +28,8 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
+        """Определяет права доступа на уровне запроса."""
+
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_authenticated and request.user.is_admin
@@ -36,6 +44,8 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        """Определяет права доступа на уровне объекта."""
+
         if request.method in permissions.SAFE_METHODS:
             return True
 

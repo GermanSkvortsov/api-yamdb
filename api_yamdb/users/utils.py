@@ -1,3 +1,5 @@
+"""Вспомогательные функции для приложения users."""
+
 import random
 import string
 
