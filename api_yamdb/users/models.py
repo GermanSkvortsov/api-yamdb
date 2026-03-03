@@ -1,5 +1,6 @@
 """Модели приложения users."""
 
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -48,6 +49,25 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def clean(self):
+        """Запрещает использование username 'me' на уровне модели."""
+        if self.username and self.username.lower() == 'me':
+            raise ValidationError({
+                'username': 'Имя "me" использовать запрещено'
+            })
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        """
+        Переопределённый метод сохранения с валидацией.
+        Вызывает full_clean() перед сохранением, чтобы гарантировать,
+        что все валидаторы (включая clean() с запретом 'me') будут выполнены
+        при любом способе создания пользователя (админка, shell, скрипты).
+        """
+
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     @property
     def is_admin(self):
