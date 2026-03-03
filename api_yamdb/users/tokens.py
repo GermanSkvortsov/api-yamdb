@@ -17,7 +17,7 @@ def create_jwt_token(user):
     }
 
     token = jwt.encode(
-        payload, 
+        payload,
         settings.SECRET_KEY,
         algorithm='HS256'
     )
