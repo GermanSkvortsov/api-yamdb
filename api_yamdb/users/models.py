@@ -1,3 +1,5 @@
+"""Модели приложения users."""
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -32,6 +34,13 @@ class User(AbstractUser):
         verbose_name='Роль'
     )
 
+    confirmation_code = models.CharField(
+        max_length=6,
+        blank=True,
+        null=True,
+        verbose_name='Код подтверждения'
+    )
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -54,3 +63,8 @@ class User(AbstractUser):
     def is_user(self):
         """Проверка, является ли пользователь обычным юзером."""
         return self.role == self.USER
+
+    def clear_confirmation_code(self):
+        """Стирает код подтверждения после использования."""
+        self.confirmation_code = None
+        self.save(update_fields=['confirmation_code'])
