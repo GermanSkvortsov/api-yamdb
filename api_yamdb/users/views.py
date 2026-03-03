@@ -6,7 +6,8 @@ from rest_framework import status
 from django.db import IntegrityError
 
 from .models import User
-from .serializers import SignupSerializer
+from .serializers import SignupSerializer, TokenSerializer
+from .tokens import create_jwt_token
 from .utils import generate_confirmation_code, send_confirmation_email
 
 
@@ -56,3 +57,41 @@ def signup(request):
 
     return Response({
         'username': username, 'email': email}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def token(request):
+    """
+    Получение JWT-токена по коду подтверждения.
+    Принимает username и confirmation_code.
+    При успешной проверке возвращает JWT-токен и стирает код.
+    """
+
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    username = serializer.validated_data.get('username')  # type: ignore
+    confirmation_code = serializer.validated_data.get(  # type: ignore
+        'confirmation_code')
+
+    # Ищем пользователя по username
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response(
+            {'username': ['Пользователь не найден']},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Проверяем код подтверждения
+    if user.confirmation_code != confirmation_code:
+        return Response(
+            {'confirmation_code': ['Неверный код подтверждения']},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Генерируем токен и стираем использованный код
+    jwt_token = create_jwt_token(user)
+    user.clear_confirmation_code()
+
+    return Response({'token': jwt_token}, status=status.HTTP_200_OK)
