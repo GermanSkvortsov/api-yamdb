@@ -20,16 +20,17 @@ class SafeJWTAuthentication(authentication.BaseAuthentication):
         None если токена нет,
         Иначе вызывает AuthenticationFailed.
         """
-
         auth_header = request.headers.get('Authorization')
         if not auth_header:
-            return None
+            return None  # Важно: возвращаем None, а не исключение!
+
         try:
             prefix, token = auth_header.split(' ')
             if prefix.lower() != 'bearer':
                 return None
         except ValueError:
             return None
+
         try:
             payload = jwt.decode(
                 token,

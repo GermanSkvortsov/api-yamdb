@@ -88,3 +88,29 @@ class User(AbstractUser):
         """Стирает код подтверждения после использования."""
         self.confirmation_code = None
         self.save(update_fields=['confirmation_code'])
+
+    @classmethod
+    def create_user_without_password(cls, **kwargs):
+        """
+        Создаёт пользователя без пароля.
+        Это альтернатива стандартному create_user,
+        который требует пароль. Используется при создании
+        пользователей через API (админом или при регистрации).
+        Args:
+            **kwargs: поля пользователя (username, email, и т.д.)
+        Returns:
+            User: созданный пользователь
+        """
+
+        # Создаём объект пользователя без сохранения
+        user = cls(**kwargs)
+
+        # Помечаем, что пароль не используется
+        # set_unusable_password() устанавливает специальную метку
+        # и делает непригодный для входа хэш
+        user.set_unusable_password()
+
+        # Сохраняем пользователя в БД
+        user.save()
+
+        return user
