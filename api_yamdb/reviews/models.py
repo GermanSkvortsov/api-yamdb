@@ -50,7 +50,7 @@ class Review(FeedBackModel):
             ),
             models.CheckConstraint(
                 condition=Q(score__lte=10) & Q(score__gte=1),
-                violation_error_message='Поставьте оценку от 0 до 10.',
+                violation_error_message='Поставьте оценку от 1 до 10.',
                 name='check_score_value')
         ]
 
