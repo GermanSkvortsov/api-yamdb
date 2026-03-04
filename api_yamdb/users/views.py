@@ -1,12 +1,16 @@
 """Views для приложения users."""
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
 from django.db import IntegrityError
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import User
-from .serializers import SignupSerializer, TokenSerializer
+from .permissions import IsAdminOrUnauth401
+from .serializers import (
+    MeSerializer, SignupSerializer, TokenSerializer, UserSerializer
+)
 from .tokens import create_jwt_token
 from .utils import generate_confirmation_code, send_confirmation_email
 
@@ -95,3 +99,64 @@ def token(request):
     user.clear_confirmation_code()
 
     return Response({'token': jwt_token}, status=status.HTTP_200_OK)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления пользователями.
+    - Админ может просматривать, создавать, изменять и удалять пользователей.
+    - Обычные пользователи имеют доступ только к /me/.
+    """
+
+    queryset = User.objects.all().order_by('username')
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    permission_classes = [IsAdminOrUnauth401]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=username',)
+
+    def get_permissions(self):
+        """Определяем права доступа для разных действий."""
+
+        if self.action == 'me':
+            # Для /me/ используем только IsAuthenticated
+            return [IsAuthenticated()]
+        # Для всех остальных действий - базовые права
+        return [permission() for permission in self.permission_classes]
+
+    @action(
+        detail=False,
+        methods=['get', 'patch', 'delete'],
+        url_path='me'
+    )
+    def me(self, request):
+        """Эндпоинт для работы с собственным профилем."""
+
+        user = request.user
+
+        if request.method == 'GET':
+            serializer = MeSerializer(user)
+            return Response(serializer.data)
+
+        elif request.method == 'PATCH':
+            serializer = MeSerializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+        elif request.method == 'DELETE':
+            # DELETE не разрешён для /me/
+            return Response(
+                {'detail': 'Метод "DELETE" не разрешен.'},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+
+    def put(self, request, *args, **kwargs):
+        """Запрещаем PUT запросы."""
+
+        return Response(
+            {'detail': 'Метод "PUT" не разрешен.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']

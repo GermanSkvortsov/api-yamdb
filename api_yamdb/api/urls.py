@@ -3,9 +3,8 @@
 from django.urls import include, path
 
 urlpatterns = [
-    path('', include('users.urls')),
-
+    path('v1/', include('users.urls')),
     # TODO: позже добавим titles, reviews и т.д.
-    # path('', include('titles.urls')),
-    # path('', include('reviews.urls')),
+    # path('v1/', include('titles.urls')),
+    # path('v1/', include('reviews.urls')),
 ]
