@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -50,6 +52,10 @@ class Title(models.Model):
         verbose_name='Название произведения'
     )
     year = models.IntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(timezone.now().year)
+        ],
         verbose_name='Год выпуска'
     )
     description = models.TextField(

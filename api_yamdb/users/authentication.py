@@ -15,7 +15,6 @@ class SafeJWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         """
         Проверяет JWT-токен из заголовка Authorization.
-
         Возвращает пользователя и токен если всё ок,
         None если токена нет,
         Иначе вызывает AuthenticationFailed.
@@ -24,12 +23,14 @@ class SafeJWTAuthentication(authentication.BaseAuthentication):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None
+
         try:
             prefix, token = auth_header.split(' ')
             if prefix.lower() != 'bearer':
                 return None
         except ValueError:
             return None
+
         try:
             payload = jwt.decode(
                 token,
