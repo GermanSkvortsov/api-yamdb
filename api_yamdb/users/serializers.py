@@ -43,6 +43,7 @@ class UserSerializer(BaseUserSerializer):
 
     def validate_email(self, value):
         """Проверяем уникальность email при создании."""
+
         if self.instance is None:  # Это создание, а не обновление
             if User.objects.filter(email=value).exists():
                 raise serializers.ValidationError(
@@ -56,6 +57,7 @@ class UserSerializer(BaseUserSerializer):
         Использует кастомный метод модели create_user_without_password,
         который устанавливает unusable password.
         """
+
         # Создаём пользователя через кастомный метод
         return User.create_user_without_password(**validated_data)
 
@@ -68,6 +70,7 @@ class MeSerializer(BaseUserSerializer):
 
     def validate_username(self, value):
         """Проверяем уникальность username при обновлении."""
+
         if self.instance and self.instance.username != value:
             if User.objects.filter(username=value).exists():
                 raise serializers.ValidationError(
@@ -77,6 +80,7 @@ class MeSerializer(BaseUserSerializer):
 
     def validate_email(self, value):
         """Проверяем уникальность email при обновлении."""
+
         if self.instance and self.instance.email != value:
             if User.objects.filter(email=value).exists():
                 raise serializers.ValidationError(
@@ -100,6 +104,7 @@ class MeSerializer(BaseUserSerializer):
 
 class SignupSerializer(serializers.Serializer):
     """Для регистрации."""
+
     username = serializers.CharField(
         max_length=150,
         validators=[validate_username_not_me, validate_username_regex]
@@ -109,5 +114,6 @@ class SignupSerializer(serializers.Serializer):
 
 class TokenSerializer(serializers.Serializer):
     """Для получения токена."""
+
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(write_only=True)

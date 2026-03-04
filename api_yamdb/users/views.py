@@ -1,23 +1,24 @@
 """Views для приложения users."""
 
-from rest_framework.decorators import api_view, action
-from rest_framework.response import Response
-from rest_framework import viewsets, status, filters
-from rest_framework.permissions import IsAuthenticated
 from django.db import IntegrityError
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import User
+from .permissions import IsAdminOrUnauth401
 from .serializers import (
-    SignupSerializer, TokenSerializer, UserSerializer, MeSerializer
+    MeSerializer, SignupSerializer, TokenSerializer, UserSerializer
 )
 from .tokens import create_jwt_token
 from .utils import generate_confirmation_code, send_confirmation_email
-from .permissions import IsAdminOrUnauth401
 
 
 @api_view(['POST'])
 def signup(request):
     """Регистрация нового пользователя или повторный запрос кода."""
+
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -69,6 +70,7 @@ def token(request):
     Принимает username и confirmation_code.
     При успешной проверке возвращает JWT-токен и стирает код.
     """
+
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -115,6 +117,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Определяем права доступа для разных действий."""
+
         if self.action == 'me':
             # Для /me/ используем только IsAuthenticated
             return [IsAuthenticated()]
@@ -128,6 +131,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         """Эндпоинт для работы с собственным профилем."""
+
         user = request.user
 
         if request.method == 'GET':
@@ -149,6 +153,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def put(self, request, *args, **kwargs):
         """Запрещаем PUT запросы."""
+
         return Response(
             {'detail': 'Метод "PUT" не разрешен.'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
