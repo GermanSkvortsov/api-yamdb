@@ -49,10 +49,13 @@ class Review(FeedBackModel):
                 )
             ),
             models.CheckConstraint(
-                condition=Q(score__lte=10) & Q(score__gte=0),
+                condition=Q(score__lte=10) & Q(score__gte=1),
                 violation_error_message='Поставьте оценку от 0 до 10.',
                 name='check_score_value')
         ]
+
+    def __str__(self):
+        return f'Отзыв от {self.author} на {self.title}'
 
 
 class Comment(FeedBackModel):
