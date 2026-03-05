@@ -26,8 +26,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def get_serializer_context(self):
-        """Метод обавляет произведение в контекст сериализатора."""
-
+        """Метод добавляет произведение в контекст сериализатора."""
         context = super().get_serializer_context()
         context['title'] = self.get_title()
         return context

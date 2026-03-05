@@ -59,7 +59,6 @@ class Review(FeedBackModel):
 
 class Comment(FeedBackModel):
     """Модель комментария к отзыву."""
-
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
