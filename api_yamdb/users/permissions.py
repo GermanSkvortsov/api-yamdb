@@ -65,7 +65,7 @@ class IsAdminOrUnauth401(permissions.BasePermission):
     Для UserViewSet:
     - Неаутентифицированные → 401
     - Аутентифицированные не-админы → 403
-    - Админы → доступ
+    - Админы → 200
     """
     def has_permission(self, request, view):
         # Для /me/ своя логика (обрабатывается в get_permissions)

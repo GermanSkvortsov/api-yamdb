@@ -29,38 +29,31 @@ class BaseUserSerializer(serializers.ModelSerializer):
         """
         Проверяет уникальность username при создании и обновлении.
         """
-        # Если это обновление и username меняется
-        if self.instance and self.instance.username != value:
-            if User.objects.exclude(
-                    pk=self.instance.pk).filter(username=value).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с таким именем уже существует.'
-                )
-        # Если это создание
-        elif self.instance is None:
-            if User.objects.filter(username=value).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с таким именем уже существует.'
-                )
+
+        # Если это тот же пользователь (обновление без изменения username)
+        if self.instance and self.instance.username == value:
+            return value
+
+        # Проверяем, занят ли username кем-то другим
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким именем уже существует.'
+            )
         return value
 
     def validate_email(self, value):
         """
         Проверяет уникальность email при создании и обновлении.
         """
-        # Если это обновление и email меняется
-        if self.instance and self.instance.email != value:
-            if User.objects.exclude(
-                    pk=self.instance.pk).filter(email=value).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже существует.'
-                )
-        # Если это создание
-        elif self.instance is None:
-            if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже существует.'
-                )
+        # Если это тот же пользователь (обновление без изменения email)
+        if self.instance and self.instance.email == value:
+            return value
+
+        # Проверяем, занят ли email кем-то другим
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует.'
+            )
         return value
 
 
