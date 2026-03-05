@@ -25,20 +25,32 @@ def signup(request):
     username = serializer.validated_data.get('username')  # type: ignore
     email = serializer.validated_data.get('email')  # type: ignore
 
+    user_by_username = User.objects.filter(username=username).first()
+    user_by_email = User.objects.filter(email=email).first()
+
+    if (user_by_username and user_by_email
+            and user_by_username != user_by_email):
+        return Response(
+            {
+                'username': ['Пользователь с таким username уже существует'],
+                'email': ['Пользователь с таким email уже существует']
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
         user = User.objects.get(username=username)
 
         if user.email != email:
             return Response(
-                {'email': ['Этот username принадлежит другому email']},
+                {'username': ['Пользователь с таким username уже существует']},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
     except User.DoesNotExist:
         if User.objects.filter(email=email).exists():
             return Response(
-                {'email': [
-                    'Этот email уже зарегистрирован с другим username']},
+                {'email': ['Пользователь с таким email уже существует']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
