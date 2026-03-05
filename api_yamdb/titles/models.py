@@ -7,6 +7,7 @@ User = get_user_model()
 
 
 class Category(models.Model):
+    """Модель для хранения категорий произведений."""
     name = models.CharField(
         max_length=256,
         verbose_name='Название категории'
@@ -27,6 +28,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель для хранения жанров произведений."""
     name = models.CharField(
         max_length=256,
         verbose_name='Название жанра'
@@ -47,6 +49,7 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Модель для хранения произведений."""
     name = models.CharField(
         max_length=256,
         verbose_name='Название произведения'
