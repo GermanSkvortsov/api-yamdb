@@ -22,17 +22,27 @@ class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения произведений."""
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        allow_null=True
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        default=None
+    )
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
+        read_only_fields = ('id', 'rating')
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления/обновления произведений."""
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug'
@@ -40,8 +50,24 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        allow_empty=False
     )
+    description = serializers.CharField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        default=None
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category'
+        )
+        extra_kwargs = {
+            'description': {'allow_null': True, 'required': False}
+        }
 
     def validate_year(self, value):
         if value > timezone.now().year:
@@ -50,8 +76,5 @@ class TitleCreateSerializer(serializers.ModelSerializer):
             )
         return value
 
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category'
-        )
+    def to_representation(self, instance):
+        return TitleSerializer(instance, context=self.context).data
