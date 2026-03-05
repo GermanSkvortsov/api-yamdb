@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
-
 from titles.models import Title
 
 User = get_user_model()
@@ -21,7 +20,6 @@ class FeedBackModel(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('-pub_date',)
 
 
 class Review(FeedBackModel):
@@ -39,6 +37,7 @@ class Review(FeedBackModel):
         default_related_name = 'reviews'
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
+        ordering = ('-pub_date',)
 
         constraints = [
             models.UniqueConstraint(
@@ -60,7 +59,6 @@ class Review(FeedBackModel):
 
 class Comment(FeedBackModel):
     """Модель комментария к отзыву."""
-
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -70,6 +68,7 @@ class Comment(FeedBackModel):
         default_related_name = 'comments'
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return f'комментарий к отзыву "{self.review.text[:20]}"'
