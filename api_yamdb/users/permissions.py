@@ -39,7 +39,13 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     - Автор может редактировать/удалять своё
     - Модератор и админ могут редактировать/удалять всё
     - Остальные только читать
+    - Неаутентифицированные пользователи получают 401 для небезопасных методов
     """
+    def has_permission(self, request, view):
+        """Определяет права доступа на уровне запроса."""
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         """Определяет права доступа на уровне объекта."""
