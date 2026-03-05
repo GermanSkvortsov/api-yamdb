@@ -31,7 +31,7 @@ class TitleSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
         allow_blank=True,
-        default=None
+        default=''
     )
 
     class Meta:
@@ -57,7 +57,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
         allow_blank=True,
-        default=None
+        default=''
     )
 
     class Meta:
