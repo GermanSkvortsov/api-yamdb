@@ -19,10 +19,10 @@ class BaseUserSerializer(serializers.ModelSerializer):
         fields = (
             'username',
             'email',
+            'role',
             'first_name',
             'last_name',
             'bio',
-            'role'
         )
 
     def validate_username(self, value):
