@@ -19,7 +19,6 @@ def validate_username_regex(value):
     Проверяет, что username содержит только допустимые символы.
     Допустимы: буквы, цифры, и символы @/./+/-/_
     """
-
     regex_validator = RegexValidator(
         regex=r'^[\w.@+-]+$',
         message='Username может содержать только буквы, '

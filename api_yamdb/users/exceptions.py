@@ -8,6 +8,7 @@ from rest_framework import status
 def custom_exception_handler(exc, context):
     """
     Кастомный обработчик исключений.
+
     DRF по умолчанию возвращает 403 для NotAuthenticated при использовании JWT.
     Это не соответствует HTTP спецификации (RFC 7235), где отсутствие
     аутентификации должно возвращать 401. Handler исправляет это поведение.

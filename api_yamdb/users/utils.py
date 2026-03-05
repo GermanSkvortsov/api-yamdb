@@ -15,7 +15,6 @@ def generate_confirmation_code(length=6):
     Returns:
         str: Случайный код из цифр и букв латинского алфавита.
     """
-
     chars = string.digits + string.ascii_letters
     return ''.join(random.choices(chars, k=length))
 
@@ -29,7 +28,6 @@ def send_confirmation_email(user, code):
         user: Объект пользователя.
         code: Код подтверждения.
     """
-
     subject = 'Код подтверждения для YaMDb'
     message = f'Ваш код подтверждения: {code}'
     from_email = settings.DEFAULT_FROM_EMAIL

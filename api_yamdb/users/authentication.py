@@ -1,8 +1,10 @@
 """Кастомная аутентификация по JWT-токену."""
 
 import jwt
-from rest_framework import authentication, exceptions
+
 from django.conf import settings
+from rest_framework import authentication, exceptions
+
 from .models import User
 
 
@@ -15,11 +17,11 @@ class SafeJWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         """
         Проверяет JWT-токен из заголовка Authorization.
+
         Возвращает пользователя и токен если всё ок,
         None если токена нет,
         Иначе вызывает AuthenticationFailed.
         """
-
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None

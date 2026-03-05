@@ -1,6 +1,5 @@
 """Views для приложения users."""
 
-from django.db import IntegrityError
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +8,10 @@ from rest_framework.response import Response
 from .models import User
 from .permissions import IsAdminOrUnauth401
 from .serializers import (
-    MeSerializer, SignupSerializer, TokenSerializer, UserSerializer
+    MeSerializer,
+    SignupSerializer,
+    TokenSerializer,
+    UserSerializer
 )
 from .tokens import create_jwt_token
 from .utils import generate_confirmation_code, send_confirmation_email
@@ -18,7 +20,6 @@ from .utils import generate_confirmation_code, send_confirmation_email
 @api_view(['POST'])
 def signup(request):
     """Регистрация нового пользователя или повторный запрос кода."""
-
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -53,17 +54,12 @@ def signup(request):
                 {'email': ['Пользователь с таким email уже существует']},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        try:
-            user = User.objects.create_user(
-                username=username,  # type: ignore
-                email=email,
-                password=None
-            )
-        except IntegrityError:
-            return Response(
-                {'error': ['Ошибка при создании пользователя']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
+        user = User.objects.create_user(
+            username=username,  # type: ignore
+            email=email,
+            password=None
+        )
 
     code = generate_confirmation_code()
     user.confirmation_code = code
@@ -82,7 +78,6 @@ def token(request):
     Принимает username и confirmation_code.
     При успешной проверке возвращает JWT-токен и стирает код.
     """
-
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -90,7 +85,6 @@ def token(request):
     confirmation_code = serializer.validated_data.get(  # type: ignore
         'confirmation_code')
 
-    # Ищем пользователя по username
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -99,14 +93,12 @@ def token(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # Проверяем код подтверждения
     if user.confirmation_code != confirmation_code:
         return Response(
             {'confirmation_code': ['Неверный код подтверждения']},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Генерируем токен и стираем использованный код
     jwt_token = create_jwt_token(user)
     user.clear_confirmation_code()
 
@@ -129,11 +121,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Определяем права доступа для разных действий."""
-
         if self.action == 'me':
-            # Для /me/ используем только IsAuthenticated
             return [IsAuthenticated()]
-        # Для всех остальных действий - базовые права
+
         return [permission() for permission in self.permission_classes]
 
     @action(
@@ -143,29 +133,26 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         """Эндпоинт для работы с собственным профилем."""
-
         user = request.user
 
         if request.method == 'GET':
             serializer = MeSerializer(user)
             return Response(serializer.data)
 
-        elif request.method == 'PATCH':
+        if request.method == 'PATCH':
             serializer = MeSerializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
 
-        elif request.method == 'DELETE':
-            # DELETE не разрешён для /me/
-            return Response(
-                {'detail': 'Метод "DELETE" не разрешен.'},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
-            )
+        # DELETE не разрешён для /me/
+        return Response(
+            {'detail': 'Метод "DELETE" не разрешен.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def put(self, request, *args, **kwargs):
         """Запрещаем PUT запросы."""
-
         return Response(
             {'detail': 'Метод "PUT" не разрешен.'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED

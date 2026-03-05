@@ -52,7 +52,6 @@ class User(AbstractUser):
 
     def clean(self):
         """Запрещает использование username 'me' на уровне модели."""
-
         if self.username and self.username.lower() == 'me':
             raise ValidationError({
                 'username': 'Имя "me" использовать запрещено'
@@ -62,23 +61,19 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         """Проверка, является ли пользователь администратором."""
-
         return self.role == self.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
         """Проверка, является ли пользователь модератором."""
-
         return self.role == self.MODERATOR
 
     @property
     def is_user(self):
         """Проверка, является ли пользователь обычным юзером."""
-
         return self.role == self.USER
 
     def clear_confirmation_code(self):
         """Стирает код подтверждения после использования."""
-
         self.confirmation_code = None
         self.save(update_fields=['confirmation_code'])
