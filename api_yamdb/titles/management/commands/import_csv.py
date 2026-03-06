@@ -1,12 +1,14 @@
+"""Management-команда для импорта данных из CSV файлов."""
+
 import csv
 import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from reviews.models import Comment, Review
 from titles.models import Category, Genre, Title
 from users.models import User
-from reviews.models import Review, Comment
 
 
 FIELD_MAPPING = {
@@ -17,6 +19,8 @@ FIELD_MAPPING = {
 
 
 class Command(BaseCommand):
+    """Импортирует данные из CSV файлов в базу данных."""
+
     help = 'Импорт данных из CSV файлов'
 
     def import_row(self, model, row):
@@ -30,6 +34,7 @@ class Command(BaseCommand):
         model.objects.update_or_create(id=obj_id, defaults=row)
 
     def handle(self, *args, **options):
+        """Выполняет импорт всех CSV файлов."""
         data_files = [
             (User, 'users.csv'),
             (Category, 'category.csv'),

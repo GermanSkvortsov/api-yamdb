@@ -1,3 +1,5 @@
+"""Главные URL-маршруты для API v1."""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
