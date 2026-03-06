@@ -52,5 +52,4 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Cохраняет комментарий с автором и отзывом."""
-        # review = self.get_review()
         serializer.save(author=self.request.user, review=self.get_review())
