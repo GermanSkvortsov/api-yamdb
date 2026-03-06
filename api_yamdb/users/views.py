@@ -1,5 +1,6 @@
 """Views для приложения users."""
 
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -13,8 +14,7 @@ from .serializers import (
     TokenSerializer,
     UserSerializer
 )
-from .tokens import create_jwt_token
-from .utils import generate_confirmation_code, send_confirmation_email
+from .utils import send_confirmation_email
 
 
 @api_view(['POST'])
@@ -61,11 +61,11 @@ def signup(request):
             password=None
         )
 
-    code = generate_confirmation_code()
-    user.confirmation_code = code
-    user.save(update_fields=['confirmation_code'])
+    # Генерируем токен через default_token_generator (не храним в БД!)
+    token = default_token_generator.make_token(user)
 
-    send_confirmation_email(user, code)
+    # Отправляем email с токеном
+    send_confirmation_email(user, token)
 
     return Response({
         'username': username, 'email': email}, status=status.HTTP_200_OK)
@@ -76,7 +76,7 @@ def token(request):
     """
     Получение JWT-токена по коду подтверждения.
     Принимает username и confirmation_code.
-    При успешной проверке возвращает JWT-токен и стирает код.
+    При успешной проверке возвращает JWT-токен.
     """
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -93,14 +93,16 @@ def token(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    if user.confirmation_code != confirmation_code:
+    # Проверяем токен через default_token_generator
+    if not default_token_generator.check_token(user, confirmation_code):
         return Response(
             {'confirmation_code': ['Неверный код подтверждения']},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    jwt_token = create_jwt_token(user)
-    user.clear_confirmation_code()
+    # Создаем JWT токен
+    from rest_framework_simplejwt.tokens import AccessToken
+    jwt_token = str(AccessToken.for_user(user))
 
     return Response({'token': jwt_token}, status=status.HTTP_200_OK)
 
@@ -118,18 +120,13 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrUnauth401]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
-
-    def get_permissions(self):
-        """Определяем права доступа для разных действий."""
-        if self.action == 'me':
-            return [IsAuthenticated()]
-
-        return [permission() for permission in self.permission_classes]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     @action(
         detail=False,
-        methods=['get', 'patch', 'delete'],
-        url_path='me'
+        methods=['get', 'patch'],
+        url_path='me',
+        permission_classes=[IsAuthenticated]
     )
     def me(self, request):
         """Эндпоинт для работы с собственным профилем."""
@@ -144,18 +141,3 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
-
-        # DELETE не разрешён для /me/
-        return Response(
-            {'detail': 'Метод "DELETE" не разрешен.'},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def put(self, request, *args, **kwargs):
-        """Запрещаем PUT запросы."""
-        return Response(
-            {'detail': 'Метод "PUT" не разрешен.'},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
