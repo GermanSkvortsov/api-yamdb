@@ -1,6 +1,5 @@
 """Сериализаторы для категорий, жанров и произведений."""
 
-from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Category, Genre, Title
@@ -29,13 +28,7 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True, read_only=True)
     rating = serializers.IntegerField(
         read_only=True,
-        required=False,
-        allow_null=True,
-    )
-    description = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        default='',
+        default=None,
     )
 
     class Meta:
@@ -43,7 +36,6 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-        read_only_fields = ('id', 'rating')
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -59,28 +51,12 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         many=True,
         allow_empty=False
     )
-    description = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        default=''
-    )
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year', 'description', 'genre', 'category'
         )
-        extra_kwargs = {
-            'description': {'allow_null': True, 'required': False}
-        }
-
-    def validate_year(self, value):
-        """Проверяет, что год выпуска не больше текущего."""
-        if value > timezone.now().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего'
-            )
-        return value
 
     def to_representation(self, instance):
         """Возвращает полное представление произведения."""
