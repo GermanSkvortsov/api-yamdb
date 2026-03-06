@@ -1,18 +1,13 @@
 """Сериализаторы для приложения users."""
 
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
 from .models import User
-from .validators import validate_username_not_me, validate_username_regex
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
     """Базовый сериализатор с общими настройками."""
-
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_not_me, validate_username_regex]
-    )
 
     class Meta:
         model = User
@@ -83,15 +78,15 @@ class MeSerializer(BaseUserSerializer):
 class SignupSerializer(serializers.Serializer):
     """Для регистрации."""
 
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_not_me, validate_username_regex]
-    )
-    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(validators=[UnicodeUsernameValidator()])
+    email = serializers.EmailField()
 
 
 class TokenSerializer(serializers.Serializer):
     """Для получения токена."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(
+        validators=[UnicodeUsernameValidator()],
+        write_only=True
+    )
     confirmation_code = serializers.CharField(write_only=True)

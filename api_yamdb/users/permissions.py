@@ -4,22 +4,6 @@ from rest_framework import permissions
 from rest_framework.exceptions import NotAuthenticated
 
 
-class IsAdmin(permissions.BasePermission):
-    """Доступ только для администраторов."""
-
-    def has_permission(self, request, view):
-        """Проверяет, является ли пользователь администратором."""
-        return request.user.is_authenticated and request.user.is_admin
-
-
-class IsModerator(permissions.BasePermission):
-    """Доступ только для модераторов."""
-
-    def has_permission(self, request, view):
-        """Проверяет, является ли пользователь модератором."""
-        return request.user.is_authenticated and request.user.is_moderator
-
-
 class IsAdminOrReadOnly(permissions.BasePermission):
     """
     Администратор может всё.
