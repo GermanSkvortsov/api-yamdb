@@ -2,12 +2,12 @@
 
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
-from rest_framework.response import Response
+from rest_framework import filters, viewsets
 
 from users.permissions import IsAdminOrReadOnly
 from .filters import TitleFilter
 from .models import Category, Genre, Title
+from .viewsets import CategoryGenreViewSet
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
@@ -16,28 +16,14 @@ from .serializers import (
 )
 
 
-class ListCreateDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    """Базовый вьюсет для моделей."""
-
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (IsAdminOrReadOnly,)
-
-
-class CategoryViewSet(ListCreateDestroyViewSet):
+class CategoryViewSet(CategoryGenreViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(ListCreateDestroyViewSet):
+class GenreViewSet(CategoryGenreViewSet):
     """Вьюсет для жанров."""
 
     queryset = Genre.objects.all()
@@ -69,41 +55,3 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleSerializer
         return TitleCreateSerializer
-
-    def create(self, request, *args, **kwargs):
-        """Создаёт новое произведение и возвращает полное представление."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        instance.rating = None
-        response_serializer = TitleSerializer(
-            instance,
-            context={'request': request}
-        )
-        return Response(
-            response_serializer.data,
-            status=status.HTTP_201_CREATED,
-        )
-
-    def update(self, request, *args, **kwargs):
-        """Обновляет произведение и возвращает актуальное представление."""
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance,
-            data=request.data,
-            partial=partial
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        instance = Title.objects.annotate(
-            rating=Avg(
-                'reviews__score',
-                default=None
-            ),
-        ).get(pk=instance.pk)
-        response_serializer = TitleSerializer(
-            instance,
-            context={'request': request},
-        )
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
