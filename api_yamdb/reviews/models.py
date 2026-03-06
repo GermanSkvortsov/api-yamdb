@@ -1,8 +1,8 @@
 """Модели для отзывов и комментариев."""
 
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Q
 
 from titles.models import Title
 
@@ -39,6 +39,10 @@ class Review(FeedBackModel):
 
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
+        validators=[
+            MinValueValidator(1, message='Поставьте оценку от 1 до 10.'),
+            MaxValueValidator(10, message='Поставьте оценку от 1 до 10.'),
+        ]
     )
 
     class Meta:
@@ -55,10 +59,6 @@ class Review(FeedBackModel):
                     'Уже добавлен ваш отзыв к этому произведению.'
                 )
             ),
-            models.CheckConstraint(
-                condition=Q(score__lte=10) & Q(score__gte=1),
-                violation_error_message='Поставьте оценку от 1 до 10.',
-                name='check_score_value')
         ]
 
     def __str__(self):
