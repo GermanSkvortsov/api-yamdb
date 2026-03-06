@@ -26,12 +26,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Возвращает отзывы для конкретного произведения."""
         return self.get_title().reviews.all()  # type: ignore
 
-    # def get_serializer_context(self):
-    #     """Добавляет произведение в контекст сериализатора."""
-    #     context = super().get_serializer_context()
-    #     context['title'] = self.get_title()
-    #     return context
-
     def perform_create(self, serializer):
         """Cохраняет отзыв с автором и произведением."""
         serializer.save(author=self.request.user, title=self.get_title())
@@ -51,13 +45,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('review_id'),
             title=self.kwargs.get('title_id')
         )
-        # return review
-    # def get_review(self):
-    #     """Bозвращает объект отзыва по review_id и title_id"""
-    #     review_id = self.kwargs.get('review_id')
-    #     title_id = self.kwargs.get('title_id')
-    #     review = get_object_or_404(Review, id=review_id, title=title_id)
-    #     return review
 
     def get_queryset(self):
         """Bозвращает комментарии для отзыва."""
