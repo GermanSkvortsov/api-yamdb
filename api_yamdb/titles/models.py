@@ -1,19 +1,30 @@
 """Модели для категорий, жанров и произведений."""
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import ValidationError
 from django.db import models
 from django.utils import timezone
+
+
+MAX_LENGTH = 256
+
+
+def validate_year(value):
+    """Проверка, что год не больше текущего."""
+    current_year = timezone.now().year
+    if value > current_year:
+        raise ValidationError(
+            f'Год {value} не может быть больше текущего ({current_year})'
+        )
 
 
 class Category(models.Model):
     """Модель для хранения категорий произведений."""
 
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LENGTH,
         verbose_name='Название категории',
     )
     slug = models.SlugField(
-        max_length=50,
         unique=True,
         verbose_name='Слаг',
     )
@@ -31,11 +42,10 @@ class Genre(models.Model):
     """Модель для хранения жанров произведений."""
 
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LENGTH,
         verbose_name='Название жанра',
     )
     slug = models.SlugField(
-        max_length=50,
         unique=True,
         verbose_name='Слаг',
     )
@@ -53,14 +63,11 @@ class Title(models.Model):
     """Модель для хранения произведений."""
 
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LENGTH,
         verbose_name='Название произведения',
     )
     year = models.IntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(timezone.now().year),
-        ],
+        validators=[validate_year],
         verbose_name='Год выпуска',
     )
     description = models.TextField(
