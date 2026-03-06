@@ -1,6 +1,6 @@
 """Модели для категорий, жанров и произведений."""
 
-from django.core.validators import ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 

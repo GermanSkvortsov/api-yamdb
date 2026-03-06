@@ -2,26 +2,39 @@
 
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+
+
+FORBIDDEN_USERNAMES = ('me',)
+MAX_LENGTH_ROLE = 20
+
+
+def validate_forbidden_username(value):
+    """Запрещает использование запрещенных имен пользователя."""
+    if value.lower() in FORBIDDEN_USERNAMES:
+        raise ValidationError(
+            f'Имя "{value}" использовать запрещено'
+        )
 
 
 class User(AbstractUser):
     """Кастомная модель пользователя с ролями и bio."""
 
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = [
-        (USER, 'user'),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin'),
-    ]
+    class Role(models.TextChoices):
+        USER = 'user', 'Пользователь'
+        MODERATOR = 'moderator', 'Модератор'
+        ADMIN = 'admin', 'Администратор'
 
     email = models.EmailField(
-        max_length=254,
         unique=True,
         verbose_name='Email'
+    )
+
+    username = models.CharField(
+        unique=True,
+        validators=[UnicodeUsernameValidator(), validate_forbidden_username],
+        verbose_name='Username'
     )
     bio = models.TextField(
         blank=True,
@@ -29,51 +42,26 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     role = models.CharField(
-        max_length=20,
-        choices=ROLE_CHOICES,
-        default=USER,
+        max_length=MAX_LENGTH_ROLE,
+        choices=Role.choices,
+        default=Role.USER,
         verbose_name='Роль'
-    )
-
-    confirmation_code = models.CharField(
-        max_length=6,
-        blank=True,
-        null=True,
-        verbose_name='Код подтверждения'
     )
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ['username']
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
 
-    def clean(self):
-        """Запрещает использование username 'me' на уровне модели."""
-        if self.username and self.username.lower() == 'me':
-            raise ValidationError({
-                'username': 'Имя "me" использовать запрещено'
-            })
-        super().clean()
-
     @property
     def is_admin(self):
         """Проверка, является ли пользователь администратором."""
-        return self.role == self.ADMIN or self.is_superuser
+        return self.role == self.Role.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
         """Проверка, является ли пользователь модератором."""
-        return self.role == self.MODERATOR
-
-    @property
-    def is_user(self):
-        """Проверка, является ли пользователь обычным юзером."""
-        return self.role == self.USER
-
-    def clear_confirmation_code(self):
-        """Стирает код подтверждения после использования."""
-        self.confirmation_code = None
-        self.save(update_fields=['confirmation_code'])
+        return self.role == self.Role.MODERATOR
