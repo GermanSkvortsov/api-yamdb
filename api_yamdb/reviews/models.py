@@ -1,22 +1,28 @@
+"""Модели для отзывов и комментариев."""
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
+
 from titles.models import Title
+
 
 User = get_user_model()
 
 
 class FeedBackModel(models.Model):
     """Абстрактная модель для обратной связи от пользователей."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name="Автор",
+        verbose_name='Автор',
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Дата публикации")
-    text = models.TextField(verbose_name="Текст")
+        verbose_name='Дата публикации',
+    )
+    text = models.TextField(verbose_name='Текст')
 
     class Meta:
         abstract = True
@@ -24,13 +30,15 @@ class FeedBackModel(models.Model):
 
 class Review(FeedBackModel):
     """Модель отзыва на произведение."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        verbose_name='Произведение')
+        verbose_name='Произведение',
+    )
 
     score = models.PositiveSmallIntegerField(
-        verbose_name="Оценка"
+        verbose_name='Оценка',
     )
 
     class Meta:
@@ -59,10 +67,12 @@ class Review(FeedBackModel):
 
 class Comment(FeedBackModel):
     """Модель комментария к отзыву."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        verbose_name='Отзыв')
+        verbose_name='Отзыв',
+    )
 
     class Meta:
         default_related_name = 'comments'

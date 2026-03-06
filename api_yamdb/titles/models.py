@@ -1,21 +1,21 @@
-from django.contrib.auth import get_user_model
+"""Модели для категорий, жанров и произведений."""
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 
-User = get_user_model()
-
 
 class Category(models.Model):
     """Модель для хранения категорий произведений."""
+
     name = models.CharField(
         max_length=256,
-        verbose_name='Название категории'
+        verbose_name='Название категории',
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name='Слаг'
+        verbose_name='Слаг',
     )
 
     class Meta:
@@ -29,14 +29,15 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Модель для хранения жанров произведений."""
+
     name = models.CharField(
         max_length=256,
-        verbose_name='Название жанра'
+        verbose_name='Название жанра',
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name='Слаг'
+        verbose_name='Слаг',
     )
 
     class Meta:
@@ -50,33 +51,34 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Модель для хранения произведений."""
+
     name = models.CharField(
         max_length=256,
-        verbose_name='Название произведения'
+        verbose_name='Название произведения',
     )
     year = models.IntegerField(
         validators=[
             MinValueValidator(0),
-            MaxValueValidator(timezone.now().year)
+            MaxValueValidator(timezone.now().year),
         ],
-        verbose_name='Год выпуска'
+        verbose_name='Год выпуска',
     )
     description = models.TextField(
         blank=True,
         null=True,
-        verbose_name='Описание'
+        verbose_name='Описание',
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True,
-        verbose_name='Категория'
+        verbose_name='Категория',
     )
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
-        verbose_name='Жанр'
+        verbose_name='Жанр',
     )
 
     class Meta:

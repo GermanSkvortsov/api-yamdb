@@ -36,11 +36,13 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     """
     Права для отзывов и комментариев:
+
     - Автор может редактировать/удалять своё
     - Модератор и админ могут редактировать/удалять всё
     - Остальные только читать
     - Неаутентифицированные пользователи получают 401 для небезопасных методов
     """
+
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
         if request.method in permissions.SAFE_METHODS:
@@ -62,12 +64,14 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
 
 class IsAdminOrUnauth401(permissions.BasePermission):
     """
-    Для UserViewSet:
-    - Неаутентифицированные → 401
-    - Аутентифицированные не-админы → 403
-    - Админы → доступ
+    Возвращает:
+    - 401 для неаутентифицированных
+    - 403 для аутентифицированных не-админов
+    - 200 для админов
     """
+
     def has_permission(self, request, view):
+        """Определяет права доступа на уровне запроса."""
         # Для /me/ своя логика (обрабатывается в get_permissions)
         if view.action == 'me':
             return True
@@ -75,7 +79,7 @@ class IsAdminOrUnauth401(permissions.BasePermission):
         # Если пользователь не аутентифицирован
         if not request.user.is_authenticated:
             # ВСЕГДА кидаем NotAuthenticated для 401
-            # DRF сам превратит это в 401, а нам не нужно думать о заголовках
+            # DRF сам превратит это в 401
             raise NotAuthenticated('Требуется аутентификация')
 
         # Если аутентифицирован, но не админ - будет 403

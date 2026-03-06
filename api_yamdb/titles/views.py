@@ -1,17 +1,19 @@
+"""Вьюсеты для категорий, жанров и произведений."""
+
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets, mixins, status
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.response import Response
 
+from users.permissions import IsAdminOrReadOnly
+from .filters import TitleFilter
+from .models import Category, Genre, Title
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
     TitleSerializer,
-    TitleCreateSerializer
+    TitleCreateSerializer,
 )
-from .models import Category, Genre, Title
-from .filters import TitleFilter
-from users.permissions import IsAdminOrReadOnly
 
 
 class ListCreateDestroyViewSet(
@@ -21,6 +23,7 @@ class ListCreateDestroyViewSet(
     viewsets.GenericViewSet
 ):
     """Базовый вьюсет для моделей."""
+
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -29,44 +32,61 @@ class ListCreateDestroyViewSet(
 
 class CategoryViewSet(ListCreateDestroyViewSet):
     """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
     """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
+
     queryset = Title.objects.annotate(
-        rating=Avg('reviews__score', default=None)
+        rating=Avg(
+            'reviews__score',
+            default=None,
+        )
     ).order_by('id')
-    filter_backends = (DjangoFilterBackend,
-                       filters.SearchFilter,
-                       filters.OrderingFilter)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    )
     filterset_class = TitleFilter
-    search_fields = ('name', 'description')
-    ordering_fields = ('name', 'year', 'rating')
+    search_fields = ('name', 'description',)
+    ordering_fields = ('name', 'year', 'rating',)
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
+        """Возвращает сериализатор в зависимости от действия."""
         if self.action in ('list', 'retrieve'):
             return TitleSerializer
         return TitleCreateSerializer
 
     def create(self, request, *args, **kwargs):
+        """Создаёт новое произведение и возвращает полное представление."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
         instance.rating = None
-        response_serializer = TitleSerializer(instance, context={'request': request})
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        response_serializer = TitleSerializer(
+            instance,
+            context={'request': request}
+        )
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
 
     def update(self, request, *args, **kwargs):
+        """Обновляет произведение и возвращает актуальное представление."""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(
@@ -77,10 +97,13 @@ class TitleViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance = Title.objects.annotate(
-            rating=Avg('reviews__score', default=None)
+            rating=Avg(
+                'reviews__score',
+                default=None
+            ),
         ).get(pk=instance.pk)
         response_serializer = TitleSerializer(
             instance,
-            context={'request': request}
+            context={'request': request},
         )
         return Response(response_serializer.data, status=status.HTTP_200_OK)
