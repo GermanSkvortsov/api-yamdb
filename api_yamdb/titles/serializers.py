@@ -34,7 +34,6 @@ class TitleSerializer(serializers.ModelSerializer):
     )
     description = serializers.CharField(
         required=False,
-        allow_null=True,
         allow_blank=True,
         default='',
     )
@@ -62,7 +61,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     )
     description = serializers.CharField(
         required=False,
-        allow_null=True,
         allow_blank=True,
         default=''
     )
