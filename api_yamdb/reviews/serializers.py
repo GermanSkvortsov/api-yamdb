@@ -24,7 +24,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         """Валидация объекта отзыва."""
         request = self.context.get('request')
         if request.method == 'POST':  # type: ignore
-            title_id = self.context.get('view').kwargs.get('title_id')
+            title_id = self.context.get(
+                'view').kwargs.get('title_id')  # type: ignore
             title = get_object_or_404(Title, id=title_id)
             if Review.objects.filter(
                 author=request.user,  # type: ignore
@@ -38,6 +39,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
+
     author = SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:

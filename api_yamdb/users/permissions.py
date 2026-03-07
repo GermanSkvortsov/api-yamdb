@@ -1,23 +1,6 @@
 """Кастомные permissions для приложения users."""
 
 from rest_framework import permissions
-from rest_framework.exceptions import NotAuthenticated
-
-
-class IsAdmin(permissions.BasePermission):
-    """Доступ только для администраторов."""
-
-    def has_permission(self, request, view):
-        """Проверяет, является ли пользователь администратором."""
-        return request.user.is_authenticated and request.user.is_admin
-
-
-class IsModerator(permissions.BasePermission):
-    """Доступ только для модераторов."""
-
-    def has_permission(self, request, view):
-        """Проверяет, является ли пользователь модератором."""
-        return request.user.is_authenticated and request.user.is_moderator
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -28,9 +11,11 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_authenticated and request.user.is_admin
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (request.user.is_authenticated
+                and request.user.is_admin)
+        )
 
 
 class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
@@ -45,9 +30,10 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_authenticated
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
         """Определяет права доступа на уровне объекта."""
@@ -57,34 +43,19 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
 
-        return (obj.author == request.user
-                or request.user.is_moderator
-                or request.user.is_admin)
+        return (
+            request.user.is_moderator
+            or request.user.is_admin
+            or obj.author == request.user
+        )
 
 
-class IsAdminOrUnauth401(permissions.BasePermission):
+class IsAdmin(permissions.BasePermission):
     """
-    Возвращает:
-    - 401 для неаутентифицированных
-    - 403 для аутентифицированных не-админов
-    - 200 для админов
+    Доступ только для администраторов.
+    Для /me/ используется отдельное разрешение.
     """
 
     def has_permission(self, request, view):
-        """Определяет права доступа на уровне запроса."""
-        # Для /me/ своя логика (обрабатывается в get_permissions)
-        if view.action == 'me':
-            return True
-
-        # Если пользователь не аутентифицирован
-        if not request.user.is_authenticated:
-            # ВСЕГДА кидаем NotAuthenticated для 401
-            # DRF сам превратит это в 401
-            raise NotAuthenticated('Требуется аутентификация')
-
-        # Если аутентифицирован, но не админ - будет 403
-        if not request.user.is_admin:
-            return False
-
-        # Админ - доступ разрешён
-        return True
+        """Проверяет, является ли пользователь администратором."""
+        return request.user.is_authenticated and request.user.is_admin

@@ -1,18 +1,13 @@
 """Сериализаторы для приложения users."""
 
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
-from .models import User
-from .validators import validate_username_not_me, validate_username_regex
+from .models import User, validate_forbidden_username
 
 
-class BaseUserSerializer(serializers.ModelSerializer):
-    """Базовый сериализатор с общими настройками."""
-
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_not_me, validate_username_regex]
-    )
+class UserSerializer(serializers.ModelSerializer):
+    """Для админов — можно менять роль."""
 
     class Meta:
         model = User
@@ -25,73 +20,56 @@ class BaseUserSerializer(serializers.ModelSerializer):
             'bio',
         )
 
-    def validate_username(self, value):
-        """Проверяет уникальность username при создании и обновлении."""
-        if self.instance and self.instance.username == value:
-            return value
 
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует.'
-            )
-        return value
-
-    def validate_email(self, value):
-        """Проверяет уникальность email при создании и обновлении."""
-        if self.instance and self.instance.email == value:
-            return value
-
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует.'
-            )
-        return value
-
-
-class UserSerializer(BaseUserSerializer):
-    """Для админов — можно менять роль."""
-
-    class Meta(BaseUserSerializer.Meta):
-        pass
-
-    def create(self, validated_data):
-        """
-        Создаёт пользователя с паролем (стандартный Django).
-        Пароль генерируется автоматически и не используется для входа,
-        но требуется для корректной работы стандартных механизмов Django.
-        """
-        return User.objects.create_user(**validated_data)
-
-
-class MeSerializer(BaseUserSerializer):
+class MeSerializer(UserSerializer):
     """Для обычных пользователей — роль только для чтения."""
 
-    class Meta(BaseUserSerializer.Meta):
+    class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
-    def update(self, instance, validated_data):
-        """
-        Обновляет пользователя, но запрещает менять роль.
-        Даже если кто-то попытается передать 'role' в запросе,
-        мы удаляем это поле перед обновлением.
-        """
-        validated_data.pop('role', None)
 
-        return super().update(instance, validated_data)
-
-
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(serializers.ModelSerializer):
     """Для регистрации."""
 
-    username = serializers.CharField(
-        max_length=150,
-        validators=[validate_username_not_me, validate_username_regex]
-    )
-    email = serializers.EmailField(max_length=254)
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+        extra_kwargs = {
+            'username': {'validators': [
+                UnicodeUsernameValidator(),
+                validate_forbidden_username,
+            ]},
+            'email': {'validators': []},
+        }
+
+    def validate(self, data):
+        """Проверяет конфликты username и email."""
+        username = data.get('username')
+        email = data.get('email')
+
+        user_by_username = User.objects.filter(username=username).first()
+        user_by_email = User.objects.filter(email=email).first()
+
+        if (user_by_username and user_by_email
+                and user_by_username != user_by_email):
+            raise serializers.ValidationError({
+                'username': 'Пользователь с таким username уже существует',
+                'email': 'Пользователь с таким email уже существует'
+            })
+
+        return data
+
+    def create(self, validated_data):
+        """Создаёт пользователя без пароля (он не нужен для входа)."""
+        return User.objects.create_user(**validated_data, password=None)
 
 
 class TokenSerializer(serializers.Serializer):
     """Для получения токена."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(
+        max_length=150,
+        validators=[UnicodeUsernameValidator()],
+        write_only=True
+    )
     confirmation_code = serializers.CharField(write_only=True)

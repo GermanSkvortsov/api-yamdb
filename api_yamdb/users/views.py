@@ -1,13 +1,14 @@
 """Views для приложения users."""
 
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import User
-from .permissions import IsAdminOrUnauth401
+from .permissions import IsAdmin
 from .serializers import (
     MeSerializer,
     SignupSerializer,
@@ -25,19 +26,6 @@ def signup(request):
 
     username = serializer.validated_data.get('username')  # type: ignore
     email = serializer.validated_data.get('email')  # type: ignore
-
-    user_by_username = User.objects.filter(username=username).first()
-    user_by_email = User.objects.filter(email=email).first()
-
-    if (user_by_username and user_by_email
-            and user_by_username != user_by_email):
-        return Response(
-            {
-                'username': ['Пользователь с таким username уже существует'],
-                'email': ['Пользователь с таким email уже существует']
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
     try:
         user = User.objects.get(username=username)
@@ -67,8 +55,7 @@ def signup(request):
     # Отправляем email с токеном
     send_confirmation_email(user, token)
 
-    return Response({
-        'username': username, 'email': email}, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -85,22 +72,14 @@ def token(request):
     confirmation_code = serializer.validated_data.get(  # type: ignore
         'confirmation_code')
 
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return Response(
-            {'username': ['Пользователь не найден']},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    user = get_object_or_404(User, username=username)
 
-    # Проверяем токен через default_token_generator
     if not default_token_generator.check_token(user, confirmation_code):
         return Response(
             {'confirmation_code': ['Неверный код подтверждения']},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Создаем JWT токен
     from rest_framework_simplejwt.tokens import AccessToken
     jwt_token = str(AccessToken.for_user(user))
 
@@ -117,7 +96,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
     lookup_field = 'username'
-    permission_classes = [IsAdminOrUnauth401]
+    permission_classes = [IsAdmin]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
