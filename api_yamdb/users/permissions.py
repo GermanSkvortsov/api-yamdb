@@ -11,9 +11,11 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_authenticated and request.user.is_admin
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (request.user.is_authenticated
+                and request.user.is_admin)
+        )
 
 
 class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
@@ -28,9 +30,10 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_authenticated
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
         """Определяет права доступа на уровне объекта."""
@@ -54,11 +57,5 @@ class IsAdmin(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        """Определяет права доступа на уровне запроса."""
-        if view.action == 'me':
-            return True
-
-        if not request.user.is_authenticated:
-            return False
-
-        return request.user.is_admin
+        """Проверяет, является ли пользователь администратором."""
+        return request.user.is_authenticated and request.user.is_admin
