@@ -2,7 +2,7 @@
 
 import django_filters
 
-from .models import Title
+from titles.models import Title
 
 
 class TitleFilter(django_filters.FilterSet):
