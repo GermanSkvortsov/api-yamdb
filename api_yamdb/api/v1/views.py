@@ -1,3 +1,5 @@
+"""Views для API v1."""
+
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -7,6 +9,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Review
 from titles.models import Category, Genre, Title
@@ -14,10 +17,18 @@ from users.models import User
 
 from .filters import TitleFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorOrModeratorOrAdmin
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, MeSerializer, ReviewSerializer,
-                          SignupSerializer, TitleCreateSerializer,
-                          TitleSerializer, TokenSerializer, UserSerializer)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    MeSerializer,
+    ReviewSerializer,
+    SignupSerializer,
+    TitleCreateSerializer,
+    TitleSerializer,
+    TokenSerializer,
+    UserSerializer
+)
 from .utils import send_confirmation_email
 from .viewsets import CategoryGenreViewSet
 
@@ -53,10 +64,8 @@ def signup(request):
             password=None
         )
 
-    # Генерируем токен через default_token_generator (не храним в БД!)
     token = default_token_generator.make_token(user)
 
-    # Отправляем email с токеном
     send_confirmation_email(user, token)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -84,7 +93,6 @@ def token(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    from rest_framework_simplejwt.tokens import AccessToken
     jwt_token = str(AccessToken.for_user(user))
 
     return Response({'token': jwt_token}, status=status.HTTP_200_OK)
@@ -196,7 +204,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        """Bозвращает объект отзыва по review_id и title_id"""
+        """Bозвращает объект отзыва по review_id и title_id."""
         return get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
