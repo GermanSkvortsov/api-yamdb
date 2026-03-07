@@ -1,10 +1,12 @@
 """Сериализаторы для отзывов и комментариев."""
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Comment, Review
+from titles.models import Title
 
 User = get_user_model()
 
@@ -21,8 +23,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Валидация объекта отзыва."""
         request = self.context.get('request')
-        title = self.context.get('title')
         if request.method == 'POST':  # type: ignore
+            title_id = self.context.get('view').kwargs.get('title_id')
+            title = get_object_or_404(Title, id=title_id)
             if Review.objects.filter(
                 author=request.user,  # type: ignore
                 title=title
@@ -31,14 +34,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                     'Уже добавлен ваш отзыв к этому произведению.'
                 )
         return data
-
-    def validate_score(self, value):
-        """Валидация оценки произведения."""
-        if value < 1 or value > 10:
-            raise serializers.ValidationError(
-                'Поставьте оценку от 1 до 10.'
-            )
-        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
