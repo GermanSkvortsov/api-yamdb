@@ -1,7 +1,6 @@
 """Кастомные permissions для приложения users."""
 
 from rest_framework import permissions
-from rest_framework.exceptions import NotAuthenticated
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -41,34 +40,25 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
 
-        return (obj.author == request.user
-                or request.user.is_moderator
-                or request.user.is_admin)
+        return (
+            request.user.is_moderator
+            or request.user.is_admin
+            or obj.author == request.user
+        )
 
 
-class IsAdminOrUnauth401(permissions.BasePermission):
+class IsAdmin(permissions.BasePermission):
     """
-    Возвращает:
-    - 401 для неаутентифицированных
-    - 403 для аутентифицированных не-админов
-    - 200 для админов
+    Доступ только для администраторов.
+    Для /me/ используется отдельное разрешение.
     """
 
     def has_permission(self, request, view):
         """Определяет права доступа на уровне запроса."""
-        # Для /me/ своя логика (обрабатывается в get_permissions)
         if view.action == 'me':
             return True
 
-        # Если пользователь не аутентифицирован
         if not request.user.is_authenticated:
-            # ВСЕГДА кидаем NotAuthenticated для 401
-            # DRF сам превратит это в 401
-            raise NotAuthenticated('Требуется аутентификация')
-
-        # Если аутентифицирован, но не админ - будет 403
-        if not request.user.is_admin:
             return False
 
-        # Админ - доступ разрешён
-        return True
+        return request.user.is_admin

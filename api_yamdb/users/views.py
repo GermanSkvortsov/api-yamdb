@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import User
-from .permissions import IsAdminOrUnauth401
+from .permissions import IsAdmin
 from .serializers import (
     MeSerializer,
     SignupSerializer,
@@ -117,7 +117,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
     lookup_field = 'username'
-    permission_classes = [IsAdminOrUnauth401]
+    permission_classes = [IsAdmin]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']

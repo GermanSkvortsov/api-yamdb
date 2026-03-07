@@ -3,7 +3,7 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
-from .models import User
+from .models import User, validate_forbidden_username
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -75,17 +75,30 @@ class MeSerializer(BaseUserSerializer):
         return super().update(instance, validated_data)
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(serializers.ModelSerializer):
     """Для регистрации."""
 
-    username = serializers.CharField(validators=[UnicodeUsernameValidator()])
-    email = serializers.EmailField()
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+        extra_kwargs = {
+            'username': {'validators': [
+                UnicodeUsernameValidator(),
+                validate_forbidden_username,
+            ]},
+            'email': {'validators': []},
+        }
+
+    def create(self, validated_data):
+        """Создаёт пользователя без пароля (он не нужен для входа)."""
+        return User.objects.create_user(**validated_data, password=None)
 
 
 class TokenSerializer(serializers.Serializer):
     """Для получения токена."""
 
     username = serializers.CharField(
+        max_length=150,
         validators=[UnicodeUsernameValidator()],
         write_only=True
     )

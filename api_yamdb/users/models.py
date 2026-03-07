@@ -8,6 +8,7 @@ from django.db import models
 
 FORBIDDEN_USERNAMES = ('me',)
 MAX_LENGTH_ROLE = 20
+MAX_LENGTH_USERNAME = 150
 
 
 def validate_forbidden_username(value):
@@ -32,6 +33,7 @@ class User(AbstractUser):
     )
 
     username = models.CharField(
+        max_length=MAX_LENGTH_USERNAME,
         unique=True,
         validators=[UnicodeUsernameValidator(), validate_forbidden_username],
         verbose_name='Username'
