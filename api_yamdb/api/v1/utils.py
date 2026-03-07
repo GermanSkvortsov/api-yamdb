@@ -1,7 +1,7 @@
 """Вспомогательные функции для приложения users."""
 
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 
 
 def send_confirmation_email(user, token):
