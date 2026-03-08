@@ -10,7 +10,7 @@ User = get_user_model()
 
 MIN_SCORE = 1
 MAX_SCORE = 10
-PREVIEW_LEN  = 20
+PREVIEW_LEN = 20
 
 
 class FeedBackModel(models.Model):
