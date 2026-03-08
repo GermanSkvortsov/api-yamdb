@@ -1,6 +1,7 @@
 """Сериализаторы для приложения users."""
 
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -155,10 +156,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         """Валидация объекта отзыва."""
         request = self.context.get('request')
         if request.method == 'POST':  # type: ignore
+            title_id = self.context.get(
+                'view').kwargs.get('title_id')  # type: ignore
+            title = get_object_or_404(Title, id=title_id)
             if Review.objects.filter(
-                    author=request.user,  # type: ignore
-                    title=self.context.get(
-                        'view').kwargs.get('title_id')).exists():
+                author=request.user,  # type: ignore
+                title=title
+            ).exists():
                 raise serializers.ValidationError(
                     'Уже добавлен ваш отзыв к этому произведению.'
                 )
