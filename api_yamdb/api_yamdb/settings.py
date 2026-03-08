@@ -115,6 +115,9 @@ DEFAULT_FROM_EMAIL = 'yamdb@example.com'
 # Кастомная модель пользователя
 AUTH_USER_MODEL = 'users.User'
 
+# Константы для валидации
+FORBIDDEN_USERNAMES = ('me',)
+
 # Настройки DRF
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
