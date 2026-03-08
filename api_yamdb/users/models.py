@@ -1,19 +1,19 @@
 """Модели приложения users."""
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 
-FORBIDDEN_USERNAMES = ('me',)
 MAX_LENGTH_ROLE = 20
 MAX_LENGTH_USERNAME = 150
 
 
 def validate_forbidden_username(value):
     """Запрещает использование запрещенных имен пользователя."""
-    if value.lower() in FORBIDDEN_USERNAMES:
+    if value.lower() in settings.FORBIDDEN_USERNAMES:
         raise ValidationError(
             f'Имя "{value}" использовать запрещено'
         )
