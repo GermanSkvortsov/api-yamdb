@@ -6,8 +6,11 @@ from django.db import models
 
 from titles.models import Title
 
-
 User = get_user_model()
+
+MIN_SCORE = 1
+MAX_SCORE = 10
+PREVIEW_LEN = 20
 
 
 class FeedBackModel(models.Model):
@@ -40,8 +43,12 @@ class Review(FeedBackModel):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[
-            MinValueValidator(1, message='Поставьте оценку от 1 до 10.'),
-            MaxValueValidator(10, message='Поставьте оценку от 1 до 10.'),
+            MinValueValidator(
+                MIN_SCORE, message='Поставьте оценку от 1 до 10.'
+            ),
+            MaxValueValidator(
+                MAX_SCORE, message='Поставьте оценку от 1 до 10.'
+            ),
         ]
     )
 
@@ -81,4 +88,4 @@ class Comment(FeedBackModel):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return f'комментарий к отзыву "{self.review.text[:20]}"'
+        return f'комментарий к отзыву "{self.review.text[:PREVIEW_LEN]}"'

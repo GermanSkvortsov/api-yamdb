@@ -14,7 +14,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Review
 from titles.models import Category, Genre, Title
 from users.models import User
-
 from .filters import TitleFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorOrModeratorOrAdmin
 from .serializers import (
@@ -36,36 +35,16 @@ from .viewsets import CategoryGenreViewSet
 @api_view(['POST'])
 def signup(request):
     """Регистрация нового пользователя или повторный запрос кода."""
+
     serializer = SignupSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    username = serializer.validated_data.get('username')  # type: ignore
-    email = serializer.validated_data.get('email')  # type: ignore
-
-    try:
-        user = User.objects.get(username=username)
-
-        if user.email != email:
-            return Response(
-                {'username': ['Пользователь с таким username уже существует']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    except User.DoesNotExist:
-        if User.objects.filter(email=email).exists():
-            return Response(
-                {'email': ['Пользователь с таким email уже существует']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        user = User.objects.create_user(
-            username=username,  # type: ignore
-            email=email,
-            password=None
-        )
+    user, created = User.objects.get_or_create(
+        username=serializer.validated_data['username'],  # type: ignore
+        defaults={'email': serializer.validated_data['email']}  # type: ignore
+    )
 
     token = default_token_generator.make_token(user)
-
     send_confirmation_email(user, token)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
