@@ -156,9 +156,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request.method == 'POST':  # type: ignore
             if Review.objects.filter(
-                    author=request.user,  # type: ignore
-                    title=self.context.get(
-                        'view').kwargs.get('title_id')).exists():
+                author=request.user,  # type: ignore
+                title=self.context.get(
+                    'view').kwargs.get('title_id')).exists():
                 raise serializers.ValidationError(
                     'Уже добавлен ваш отзыв к этому произведению.'
                 )
