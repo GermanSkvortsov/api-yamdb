@@ -10,7 +10,7 @@ User = get_user_model()
 
 MIN_SCORE = 1
 MAX_SCORE = 10
-HELP_MSG_LEN = 20
+PREVIEW_LEN  = 20
 
 
 class FeedBackModel(models.Model):
@@ -88,4 +88,4 @@ class Comment(FeedBackModel):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return f'комментарий к отзыву "{self.review.text[:HELP_MSG_LEN]}"'
+        return f'комментарий к отзыву "{self.review.text[:PREVIEW_LEN]}"'
