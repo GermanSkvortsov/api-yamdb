@@ -44,8 +44,12 @@ class Review(FeedBackModel):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[
-            MinValueValidator(1, message='Поставьте оценку от 1 до 10.'),
-            MaxValueValidator(10, message='Поставьте оценку от 1 до 10.'),
+            MinValueValidator(
+                MIN_SCORE, message='Поставьте оценку от 1 до 10.'
+            ),
+            MaxValueValidator(
+                MAX_SCORE, message='Поставьте оценку от 1 до 10.'
+            ),
         ]
     )
 
