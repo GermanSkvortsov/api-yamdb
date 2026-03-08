@@ -6,7 +6,6 @@ from django.db import models
 
 from titles.models import Title
 
-
 User = get_user_model()
 
 MIN_SCORE = 1
